@@ -6,7 +6,8 @@ type ButtonVariant =
   | "destructive"
   | "ghost"
   | "link"
-  | "apple";
+  | "apple"
+  | "google";
 
 type ButtonSize = "sm" | "md" | "lg";
 
@@ -50,6 +51,10 @@ const variantStyles: Record<ButtonVariant, { container: string; text: string }> 
       container: "bg-black dark:bg-white",
       text: "text-white dark:text-black",
     },
+    google: {
+      container: "bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600",
+      text: "text-gray-900 dark:text-white",
+    },
   };
 
 const disabledStyles: Record<ButtonVariant, { container: string }> = {
@@ -59,6 +64,7 @@ const disabledStyles: Record<ButtonVariant, { container: string }> = {
   ghost: { container: "opacity-50" },
   link: { container: "opacity-50" },
   apple: { container: "opacity-50" },
+  google: { container: "opacity-50" },
 };
 
 const sizeStyles: Record<ButtonSize, { container: string; text: string }> = {

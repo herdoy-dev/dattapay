@@ -11,6 +11,7 @@ import React from "react";
 import type { EmailCodeFactor } from "@clerk/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppleSignInButton from "@/components/AppleSignInButton";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 import ThemeButton from "@/components/ui/ThemeButton";
 import ThemeTextInput from "@/components/ui/ThemeTextInput";
 
@@ -187,7 +188,16 @@ export default function SignInScreen() {
               </Text>
             </View>
 
-            <AppleSignInButton />
+            <GoogleSignInButton />
+            <AppleSignInButton showDivider={false} />
+
+            <View className="flex-row items-center my-5">
+              <View className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+              <Text className="mx-4 text-gray-500 dark:text-gray-400 text-sm">
+                OR
+              </Text>
+              <View className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            </View>
 
             {error ? (
               <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
