@@ -1,6 +1,7 @@
 import { Link, Stack } from "expo-router";
 import { View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import IconCircle from "@/components/ui/IconCircle";
 import ThemeButton from "@/components/ui/ThemeButton";
 
 export default function NotFoundScreen() {
@@ -8,9 +9,7 @@ export default function NotFoundScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]">
       <Stack.Screen options={{ title: "Not Found", headerShown: false }} />
       <View className="flex-1 items-center justify-center px-6">
-        <View className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full items-center justify-center mb-6">
-          <Text className="text-5xl">🔍</Text>
-        </View>
+        <IconCircle icon="🔍" size="xl" color="gray" className="mb-6" />
         <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           Page not found
         </Text>

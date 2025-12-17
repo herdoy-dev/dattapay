@@ -1,5 +1,6 @@
 import { TouchableOpacity, View, Text } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
+import IconCircle from "@/components/ui/IconCircle";
 
 interface ThemeToggleProps {
   variant?: "icon" | "row";
@@ -28,9 +29,12 @@ export default function ThemeToggle({ variant = "icon" }: ThemeToggleProps) {
       accessibilityLabel={`Switch to ${isDark ? "light" : "dark"} mode`}
       accessibilityRole="button"
     >
-      <View className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full items-center justify-center mr-3">
-        <Text className="text-lg">{isDark ? "☀️" : "🌙"}</Text>
-      </View>
+      <IconCircle
+        icon={isDark ? "☀️" : "🌙"}
+        size="sm"
+        color="gray"
+        className="mr-3"
+      />
       <View className="flex-1">
         <Text className="text-gray-500 dark:text-gray-400 text-xs">
           Appearance

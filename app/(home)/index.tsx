@@ -1,5 +1,6 @@
 import SignOutButton from "@/components/SignOutButton";
 import ThemeToggle from "@/components/ThemeToggle";
+import IconCircle from "@/components/ui/IconCircle";
 import QuickAction from "@/components/ui/QuickAction";
 import ThemeButton from "@/components/ui/ThemeButton";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
@@ -26,14 +27,18 @@ export default function HomeScreen() {
               </View>
               <View className="flex-row items-center gap-3">
                 <ThemeToggle variant="icon" />
-                <View className="w-12 h-12 bg-primary-500 rounded-full items-center justify-center">
-                  <Text className="text-white text-lg font-bold">
-                    {(
-                      user?.firstName?.[0] ||
-                      user?.emailAddresses[0].emailAddress[0]
-                    )?.toUpperCase()}
-                  </Text>
-                </View>
+                <IconCircle
+                  size="md"
+                  color="primary-solid"
+                  icon={
+                    <Text className="text-white text-lg font-bold">
+                      {(
+                        user?.firstName?.[0] ||
+                        user?.emailAddresses[0].emailAddress[0]
+                      )?.toUpperCase()}
+                    </Text>
+                  }
+                />
               </View>
             </View>
 
@@ -73,9 +78,7 @@ export default function HomeScreen() {
             </View>
 
             <View className="bg-white dark:bg-gray-900 rounded-2xl p-6 items-center justify-center flex-1 max-h-48">
-              <View className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full items-center justify-center mb-4">
-                <Text className="text-3xl">📋</Text>
-              </View>
+              <IconCircle icon="📋" size="lg" color="gray" className="mb-4" />
               <Text className="text-gray-900 dark:text-white font-semibold text-base mb-1">
                 No transactions yet
               </Text>
@@ -89,9 +92,7 @@ export default function HomeScreen() {
           <View className="px-6 pb-6">
             <View className="bg-white dark:bg-gray-900 rounded-2xl p-4">
               <View className="flex-row items-center mb-3">
-                <View className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full items-center justify-center mr-3">
-                  <Text className="text-lg">✉️</Text>
-                </View>
+                <IconCircle icon="✉️" size="sm" color="gray" className="mr-3" />
                 <View className="flex-1">
                   <Text className="text-gray-500 dark:text-gray-400 text-xs">
                     Email
