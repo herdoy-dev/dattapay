@@ -10,7 +10,7 @@ export default function SignOutButton() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.replace("/");
+      router.replace("/(auth)/sign-in");
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
     }
