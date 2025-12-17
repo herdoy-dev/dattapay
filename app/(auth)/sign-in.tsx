@@ -2,7 +2,6 @@ import { useSignIn } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import {
   Text,
-  TextInput,
   View,
   KeyboardAvoidingView,
   Platform,
@@ -13,12 +12,11 @@ import type { EmailCodeFactor } from "@clerk/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppleSignInButton from "@/components/AppleSignInButton";
 import ThemeButton from "@/components/ui/ThemeButton";
-import { useTheme } from "@/context/ThemeContext";
+import ThemeTextInput from "@/components/ui/ThemeTextInput";
 
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
-  const { isDark } = useTheme();
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -26,8 +24,6 @@ export default function SignInScreen() {
   const [showEmailCode, setShowEmailCode] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
-
-  const placeholderColor = isDark ? "#6B7280" : "#9CA3AF";
 
   const onSignInPress = React.useCallback(async () => {
     if (!isLoaded) return;
@@ -139,17 +135,12 @@ export default function SignInScreen() {
               ) : null}
 
               <View className="mb-6">
-                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Verification Code
-                </Text>
-                <TextInput
-                  value={code}
+                <ThemeTextInput
+                  variant="code"
+                  label="Verification Code"
                   placeholder="Enter 6-digit code"
-                  placeholderTextColor={placeholderColor}
+                  value={code}
                   onChangeText={setCode}
-                  keyboardType="number-pad"
-                  className="w-full h-14 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-base text-center tracking-widest"
-                  maxLength={6}
                 />
               </View>
 
@@ -207,32 +198,22 @@ export default function SignInScreen() {
             ) : null}
 
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
-              </Text>
-              <TextInput
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                value={emailAddress}
+              <ThemeTextInput
+                variant="email"
+                label="Email"
                 placeholder="Enter your email"
-                placeholderTextColor={placeholderColor}
+                value={emailAddress}
                 onChangeText={setEmailAddress}
-                className="w-full h-14 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-base"
               />
             </View>
 
             <View className="mb-6">
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
-              </Text>
-              <TextInput
-                value={password}
+              <ThemeTextInput
+                variant="password"
+                label="Password"
                 placeholder="Enter your password"
-                placeholderTextColor={placeholderColor}
-                secureTextEntry={true}
+                value={password}
                 onChangeText={setPassword}
-                className="w-full h-14 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-base"
               />
             </View>
 
