@@ -1,9 +1,10 @@
 import SignOutButton from "@/components/SignOutButton";
 import ThemeToggle from "@/components/ThemeToggle";
+import QuickAction from "@/components/ui/QuickAction";
 import ThemeButton from "@/components/ui/ThemeButton";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import { Link } from "expo-router";
-import { Text, View, TouchableOpacity } from "react-native";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
@@ -48,38 +49,10 @@ export default function HomeScreen() {
           {/* Quick Actions */}
           <View className="px-6 -mt-4">
             <View className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex-row justify-around">
-              <TouchableOpacity className="items-center">
-                <View className="w-14 h-14 bg-primary-100 dark:bg-primary-900 rounded-full items-center justify-center mb-2">
-                  <Text className="text-2xl">↑</Text>
-                </View>
-                <Text className="text-gray-600 dark:text-gray-400 text-xs font-medium">
-                  Send
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity className="items-center">
-                <View className="w-14 h-14 bg-blue-100 dark:bg-blue-900 rounded-full items-center justify-center mb-2">
-                  <Text className="text-2xl">↓</Text>
-                </View>
-                <Text className="text-gray-600 dark:text-gray-400 text-xs font-medium">
-                  Receive
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity className="items-center">
-                <View className="w-14 h-14 bg-purple-100 dark:bg-purple-900 rounded-full items-center justify-center mb-2">
-                  <Text className="text-2xl">+</Text>
-                </View>
-                <Text className="text-gray-600 dark:text-gray-400 text-xs font-medium">
-                  Top Up
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity className="items-center">
-                <View className="w-14 h-14 bg-orange-100 dark:bg-orange-900 rounded-full items-center justify-center mb-2">
-                  <Text className="text-2xl">⋯</Text>
-                </View>
-                <Text className="text-gray-600 dark:text-gray-400 text-xs font-medium">
-                  More
-                </Text>
-              </TouchableOpacity>
+              <QuickAction icon="↑" label="Send" color="primary" onPress={() => {}} />
+              <QuickAction icon="↓" label="Receive" color="blue" onPress={() => {}} />
+              <QuickAction icon="+" label="Top Up" color="purple" onPress={() => {}} />
+              <QuickAction icon="⋯" label="More" color="orange" onPress={() => {}} />
             </View>
           </View>
 
