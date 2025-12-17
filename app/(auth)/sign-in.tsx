@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   View,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +12,7 @@ import React from "react";
 import type { EmailCodeFactor } from "@clerk/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppleSignInButton from "@/components/AppleSignInButton";
+import ThemeButton from "@/components/ui/ThemeButton";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function SignInScreen() {
@@ -153,26 +153,22 @@ export default function SignInScreen() {
                 />
               </View>
 
-              <TouchableOpacity
+              <ThemeButton
+                variant="primary"
                 onPress={onVerifyPress}
-                disabled={isLoading || !code}
-                className={`w-full h-14 rounded-xl items-center justify-center ${
-                  isLoading || !code ? "bg-primary-300" : "bg-primary"
-                }`}
+                disabled={!code}
+                loading={isLoading}
               >
-                <Text className="text-white text-base font-semibold">
-                  {isLoading ? "Verifying..." : "Verify"}
-                </Text>
-              </TouchableOpacity>
+                Verify
+              </ThemeButton>
 
-              <TouchableOpacity
+              <ThemeButton
+                variant="ghost"
                 onPress={() => setShowEmailCode(false)}
-                className="mt-4 items-center"
+                className="mt-4"
               >
-                <Text className="text-primary text-sm font-medium">
-                  Back to sign in
-                </Text>
-              </TouchableOpacity>
+                Back to sign in
+              </ThemeButton>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -240,30 +236,23 @@ export default function SignInScreen() {
               />
             </View>
 
-            <TouchableOpacity
+            <ThemeButton
+              variant="primary"
               onPress={onSignInPress}
-              disabled={isLoading || !emailAddress || !password}
-              className={`w-full h-14 rounded-xl items-center justify-center ${
-                isLoading || !emailAddress || !password
-                  ? "bg-primary-300"
-                  : "bg-primary"
-              }`}
+              disabled={!emailAddress || !password}
+              loading={isLoading}
             >
-              <Text className="text-white text-base font-semibold">
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Text>
-            </TouchableOpacity>
+              Sign in
+            </ThemeButton>
 
             <View className="flex-row justify-center mt-6">
               <Text className="text-gray-600 dark:text-gray-400 text-sm">
                 Don't have an account?{" "}
               </Text>
               <Link href="/sign-up" asChild>
-                <TouchableOpacity>
-                  <Text className="text-primary text-sm font-semibold">
-                    Sign up
-                  </Text>
-                </TouchableOpacity>
+                <ThemeButton variant="link" onPress={() => {}}>
+                  Sign up
+                </ThemeButton>
               </Link>
             </View>
           </View>

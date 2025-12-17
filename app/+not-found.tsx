@@ -1,6 +1,7 @@
 import { Link, Stack } from "expo-router";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ThemeButton from "@/components/ui/ThemeButton";
 
 export default function NotFoundScreen() {
   return (
@@ -17,11 +18,9 @@ export default function NotFoundScreen() {
           The page you're looking for doesn't exist or has been moved.
         </Text>
         <Link href="/" asChild>
-          <TouchableOpacity className="bg-primary px-8 py-4 rounded-xl">
-            <Text className="text-white text-base font-semibold">
-              Go to Home
-            </Text>
-          </TouchableOpacity>
+          <ThemeButton variant="primary" fullWidth={false} onPress={() => {}}>
+            Go to Home
+          </ThemeButton>
         </Link>
       </View>
     </SafeAreaView>

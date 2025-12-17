@@ -1,6 +1,7 @@
 import { useSignInWithApple } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, Text, View } from "react-native";
+import ThemeButton from "@/components/ui/ThemeButton";
 
 interface AppleSignInButtonProps {
   onSignInComplete?: () => void;
@@ -47,14 +48,9 @@ export default function AppleSignInButton({
 
   return (
     <>
-      <TouchableOpacity
-        onPress={handleAppleSignIn}
-        className="w-full h-14 bg-black dark:bg-white rounded-xl items-center justify-center flex-row mb-3"
-      >
-        <Text className="text-white dark:text-black text-base font-semibold">
-           Sign in with Apple
-        </Text>
-      </TouchableOpacity>
+      <ThemeButton variant="apple" size="lg" onPress={handleAppleSignIn} className="mb-3">
+         Sign in with Apple
+      </ThemeButton>
 
       {showDivider && (
         <View className="flex-row items-center my-5">

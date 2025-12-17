@@ -1,6 +1,7 @@
 import { useClerk } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text } from "react-native";
+import ThemeButton from "@/components/ui/ThemeButton";
 
 export default function SignOutButton() {
   const { signOut } = useClerk();
@@ -16,16 +17,13 @@ export default function SignOutButton() {
   };
 
   return (
-    <TouchableOpacity
+    <ThemeButton
+      variant="destructive"
+      size="md"
       onPress={handleSignOut}
-      className="w-full h-12 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl items-center justify-center flex-row"
+      leftIcon={<Text className="text-red-600 dark:text-red-400">↪</Text>}
     >
-      <View className="mr-2">
-        <Text className="text-red-600 dark:text-red-400">↪</Text>
-      </View>
-      <Text className="text-red-600 dark:text-red-400 text-sm font-semibold">
-        Sign out
-      </Text>
-    </TouchableOpacity>
+      Sign out
+    </ThemeButton>
   );
 }

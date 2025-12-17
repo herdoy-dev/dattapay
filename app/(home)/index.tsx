@@ -1,5 +1,6 @@
 import SignOutButton from "@/components/SignOutButton";
 import ThemeToggle from "@/components/ThemeToggle";
+import ThemeButton from "@/components/ui/ThemeButton";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import { Link } from "expo-router";
 import { Text, View, TouchableOpacity } from "react-native";
@@ -88,11 +89,14 @@ export default function HomeScreen() {
               <Text className="text-gray-900 dark:text-white text-lg font-bold">
                 Recent Activity
               </Text>
-              <TouchableOpacity>
-                <Text className="text-primary text-sm font-medium">
-                  See All
-                </Text>
-              </TouchableOpacity>
+              <ThemeButton
+                variant="ghost"
+                size="sm"
+                fullWidth={false}
+                onPress={() => {}}
+              >
+                See All
+              </ThemeButton>
             </View>
 
             <View className="bg-white dark:bg-gray-900 rounded-2xl p-6 items-center justify-center flex-1 max-h-48">
@@ -153,18 +157,14 @@ export default function HomeScreen() {
           {/* Auth Buttons */}
           <View className="pb-8">
             <Link href="/(auth)/sign-in" asChild>
-              <TouchableOpacity className="w-full h-14 bg-primary rounded-xl items-center justify-center mb-3">
-                <Text className="text-white text-base font-semibold">
-                  Sign in
-                </Text>
-              </TouchableOpacity>
+              <ThemeButton variant="primary" onPress={() => {}} className="mb-3">
+                Sign in
+              </ThemeButton>
             </Link>
             <Link href="/(auth)/sign-up" asChild>
-              <TouchableOpacity className="w-full h-14 bg-gray-100 dark:bg-gray-800 rounded-xl items-center justify-center">
-                <Text className="text-gray-900 dark:text-white text-base font-semibold">
-                  Create account
-                </Text>
-              </TouchableOpacity>
+              <ThemeButton variant="secondary" onPress={() => {}}>
+                Create account
+              </ThemeButton>
             </Link>
           </View>
         </View>
