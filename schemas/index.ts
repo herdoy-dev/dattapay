@@ -1,0 +1,181 @@
+import * as yup from "yup";
+
+// =====================================
+// Sign Up Schema
+// =====================================
+export const signUpSchema = yup.object({
+  emailAddress: yup
+    .string()
+    .required("Email is required")
+    .email("Please enter a valid email address"),
+  password: yup
+    .string()
+    .required("Password is required")
+    .min(8, "Password must be at least 8 characters"),
+});
+
+export type SignUpFormData = yup.InferType<typeof signUpSchema>;
+
+// =====================================
+// Sign In Schema
+// =====================================
+export const signInSchema = yup.object({
+  emailAddress: yup
+    .string()
+    .required("Email is required")
+    .email("Please enter a valid email address"),
+  password: yup.string().required("Password is required"),
+});
+
+export type SignInFormData = yup.InferType<typeof signInSchema>;
+
+// =====================================
+// Verification Code Schema
+// =====================================
+export const verificationCodeSchema = yup.object({
+  code: yup
+    .string()
+    .required("Verification code is required")
+    .length(6, "Code must be 6 digits"),
+});
+
+export type VerificationCodeFormData = yup.InferType<
+  typeof verificationCodeSchema
+>;
+
+// =====================================
+// Complete Account Multi-Step Schemas
+// =====================================
+
+// Step 1: Personal Information
+export const accountStep1Schema = yup.object({
+  firstName: yup
+    .string()
+    .required("First name is required")
+    .min(2, "First name must be at least 2 characters"),
+  lastName: yup
+    .string()
+    .required("Last name is required")
+    .min(2, "Last name must be at least 2 characters"),
+  email: yup
+    .string()
+    .required("Email is required")
+    .email("Please enter a valid email address"),
+});
+
+export type AccountStep1Data = yup.InferType<typeof accountStep1Schema>;
+
+// Step 2: Contact & Identity
+export const accountStep2Schema = yup.object({
+  phoneNumberPrefix: yup
+    .string()
+    .required("Country code is required")
+    .matches(/^\+\d{1,4}$/, "Invalid country code (e.g., +1)"),
+  phoneNumber: yup
+    .string()
+    .required("Phone number is required")
+    .matches(/^\d{6,15}$/, "Phone number must be 6-15 digits"),
+  nationality: yup.string().required("Nationality is required"),
+  dateOfBirth: yup
+    .string()
+    .required("Date of birth is required")
+    .matches(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+    .test("valid-date", "Invalid date", (value) => {
+      if (!value) return false;
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    })
+    .test("min-age", "You must be at least 18 years old", (value) => {
+      if (!value) return false;
+      const birthDate = new Date(value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+      return age >= 18;
+    }),
+});
+
+export type AccountStep2Data = yup.InferType<typeof accountStep2Schema>;
+
+// Step 3: Address
+export const accountStep3Schema = yup.object({
+  permanentAddress: yup.object({
+    addressLine1: yup.string().required("Address line 1 is required"),
+    addressLine2: yup.string().optional(),
+    locality: yup.string().optional(),
+    city: yup.string().required("City is required"),
+    state: yup.string().required("State/Province is required"),
+    country: yup.string().required("Country is required"),
+    postalCode: yup.string().required("Postal code is required"),
+  }),
+});
+
+export type AccountStep3Data = yup.InferType<typeof accountStep3Schema>;
+
+// Full account schema (combining all steps)
+export const completeAccountSchema = yup.object({
+  clerkUserId: yup.string().required(),
+  firstName: yup
+    .string()
+    .required("First name is required")
+    .min(2, "First name must be at least 2 characters"),
+  lastName: yup
+    .string()
+    .required("Last name is required")
+    .min(2, "Last name must be at least 2 characters"),
+  email: yup
+    .string()
+    .required("Email is required")
+    .email("Please enter a valid email address"),
+  phoneNumberPrefix: yup
+    .string()
+    .required("Country code is required")
+    .matches(/^\+\d{1,4}$/, "Invalid country code (e.g., +1)"),
+  phoneNumber: yup
+    .string()
+    .required("Phone number is required")
+    .matches(/^\d{6,15}$/, "Phone number must be 6-15 digits"),
+  nationality: yup.string().required("Nationality is required"),
+  dateOfBirth: yup
+    .string()
+    .required("Date of birth is required")
+    .matches(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+    .test("valid-date", "Invalid date", (value) => {
+      if (!value) return false;
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    })
+    .test("min-age", "You must be at least 18 years old", (value) => {
+      if (!value) return false;
+      const birthDate = new Date(value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+      return age >= 18;
+    }),
+  permanentAddress: yup.object({
+    addressLine1: yup.string().required("Address line 1 is required"),
+    addressLine2: yup.string().optional(),
+    locality: yup.string().optional(),
+    city: yup.string().required("City is required"),
+    state: yup.string().required("State/Province is required"),
+    country: yup.string().required("Country is required"),
+    postalCode: yup.string().required("Postal code is required"),
+  }),
+});
+
+export type CompleteAccountFormData = yup.InferType<
+  typeof completeAccountSchema
+>;

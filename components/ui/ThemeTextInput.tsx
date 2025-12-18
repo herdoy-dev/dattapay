@@ -12,6 +12,7 @@ interface ThemeTextInputProps {
   maxLength?: number;
   disabled?: boolean;
   error?: boolean;
+  errorMessage?: string;
   className?: string;
 }
 
@@ -66,6 +67,7 @@ export default function ThemeTextInput({
   maxLength,
   disabled = false,
   error = false,
+  errorMessage,
   className = "",
 }: ThemeTextInputProps) {
   const { isDark } = useTheme();
@@ -73,10 +75,13 @@ export default function ThemeTextInput({
 
   const placeholderColor = isDark ? "#6B7280" : "#9CA3AF";
 
+  // Derive error state from either prop
+  const hasError = error || !!errorMessage;
+
   const baseStyles =
     "w-full h-14 px-4 bg-gray-50 dark:bg-gray-900 border rounded-xl text-gray-900 dark:text-white text-base";
 
-  const borderStyles = error
+  const borderStyles = hasError
     ? "border-red-500 dark:border-red-500"
     : "border-gray-200 dark:border-gray-700";
 
@@ -114,6 +119,11 @@ export default function ThemeTextInput({
         className={inputClasses}
         accessibilityLabel={label}
       />
+      {errorMessage && (
+        <Text className="text-xs text-red-500 dark:text-red-400 mt-1">
+          {errorMessage}
+        </Text>
+      )}
     </View>
   );
 }

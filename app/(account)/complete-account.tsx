@@ -11,32 +11,31 @@ import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import ThemeButton from "@/components/ui/ThemeButton";
 import ThemeTextInput from "@/components/ui/ThemeTextInput";
 import { useTheme } from "@/context/ThemeContext";
-import { submitAccountDetails } from "@/services/accountService";
-
-interface AccountFormData {
-  clerkUserId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumberPrefix: string;
-  phoneNumber: string;
-  nationality: string;
-  dateOfBirth: string;
-  permanentAddress: {
-    addressLine1: string;
-    addressLine2: string;
-    locality: string;
-    city: string;
-    state: string;
-    country: string;
-    postalCode: string;
-  };
-}
+import {
+  submitAccountDetails,
+  AccountFormData,
+} from "@/services/accountService";
+import { completeAccountSchema, CompleteAccountFormData } from "@/schemas";
 
 const TOTAL_STEPS = 3;
+
+// Fields for each step (used for per-step validation)
+const STEP_FIELDS = {
+  1: ["firstName", "lastName", "email"] as const,
+  2: ["phoneNumberPrefix", "phoneNumber", "nationality", "dateOfBirth"] as const,
+  3: [
+    "permanentAddress.addressLine1",
+    "permanentAddress.city",
+    "permanentAddress.state",
+    "permanentAddress.country",
+    "permanentAddress.postalCode",
+  ] as const,
+};
 
 export default function CompleteAccountScreen() {
   const router = useRouter();
@@ -45,108 +44,68 @@ export default function CompleteAccountScreen() {
 
   const [currentStep, setCurrentStep] = React.useState(1);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
+  const [serverError, setServerError] = React.useState("");
 
-  const [formData, setFormData] = React.useState<AccountFormData>({
-    clerkUserId: user?.id || "",
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.emailAddresses[0]?.emailAddress || "",
-    phoneNumberPrefix: "+1",
-    phoneNumber: "",
-    nationality: "",
-    dateOfBirth: "",
-    permanentAddress: {
-      addressLine1: "",
-      addressLine2: "",
-      locality: "",
-      city: "",
-      state: "",
-      country: "",
-      postalCode: "",
+  const {
+    control,
+    handleSubmit,
+    trigger,
+    formState: { errors },
+  } = useForm<CompleteAccountFormData>({
+    resolver: yupResolver(completeAccountSchema),
+    mode: "onChange",
+    defaultValues: {
+      clerkUserId: user?.id || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.emailAddresses[0]?.emailAddress || "",
+      phoneNumberPrefix: "+1",
+      phoneNumber: "",
+      nationality: "",
+      dateOfBirth: "",
+      permanentAddress: {
+        addressLine1: "",
+        addressLine2: "",
+        locality: "",
+        city: "",
+        state: "",
+        country: "",
+        postalCode: "",
+      },
     },
   });
 
-  const updateFormData = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  // Validate current step before proceeding
+  const validateCurrentStep = async (): Promise<boolean> => {
+    const fields = STEP_FIELDS[currentStep as keyof typeof STEP_FIELDS];
+    const result = await trigger(fields as any);
+    return result;
   };
 
-  const updateAddressField = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      permanentAddress: {
-        ...prev.permanentAddress,
-        [field]: value,
-      },
-    }));
-  };
-
-  const canProceedStep1 = () => {
-    return (
-      formData.firstName.trim() !== "" &&
-      formData.lastName.trim() !== "" &&
-      formData.email.trim() !== ""
-    );
-  };
-
-  const canProceedStep2 = () => {
-    return (
-      formData.phoneNumber.trim() !== "" &&
-      formData.nationality.trim() !== "" &&
-      formData.dateOfBirth.trim() !== ""
-    );
-  };
-
-  const canProceedStep3 = () => {
-    const addr = formData.permanentAddress;
-    return (
-      addr.addressLine1.trim() !== "" &&
-      addr.city.trim() !== "" &&
-      addr.state.trim() !== "" &&
-      addr.country.trim() !== "" &&
-      addr.postalCode.trim() !== ""
-    );
-  };
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return canProceedStep1();
-      case 2:
-        return canProceedStep2();
-      case 3:
-        return canProceedStep3();
-      default:
-        return false;
-    }
-  };
-
-  const handleNext = () => {
-    if (currentStep < TOTAL_STEPS) {
+  const handleNext = async () => {
+    const isValid = await validateCurrentStep();
+    if (isValid && currentStep < TOTAL_STEPS) {
       setCurrentStep((prev) => prev + 1);
-      setError("");
+      setServerError("");
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
-      setError("");
+      setServerError("");
     }
   };
 
-  const handleSubmit = async () => {
+  const onSubmit = async (data: CompleteAccountFormData) => {
     setIsLoading(true);
-    setError("");
+    setServerError("");
 
     try {
-      await submitAccountDetails(formData);
+      await submitAccountDetails(data as AccountFormData);
       router.replace("/(account)/complete-kyc");
     } catch (err: any) {
-      setError(err.message || "Failed to submit account details");
+      setServerError(err.message || "Failed to submit account details");
       console.error("Account submission error:", err);
     } finally {
       setIsLoading(false);
@@ -198,30 +157,51 @@ export default function CompleteAccountScreen() {
       </Text>
 
       <View className="mb-4">
-        <ThemeTextInput
-          label="First Name"
-          placeholder="Enter your first name"
-          value={formData.firstName}
-          onChangeText={(text) => updateFormData("firstName", text)}
+        <Controller
+          name="firstName"
+          control={control}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <ThemeTextInput
+              label="First Name"
+              placeholder="Enter your first name"
+              value={value}
+              onChangeText={onChange}
+              errorMessage={error?.message}
+            />
+          )}
         />
       </View>
 
       <View className="mb-4">
-        <ThemeTextInput
-          label="Last Name"
-          placeholder="Enter your last name"
-          value={formData.lastName}
-          onChangeText={(text) => updateFormData("lastName", text)}
+        <Controller
+          name="lastName"
+          control={control}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <ThemeTextInput
+              label="Last Name"
+              placeholder="Enter your last name"
+              value={value}
+              onChangeText={onChange}
+              errorMessage={error?.message}
+            />
+          )}
         />
       </View>
 
       <View className="mb-4">
-        <ThemeTextInput
-          variant="email"
-          label="Email Address"
-          placeholder="Enter your email"
-          value={formData.email}
-          onChangeText={(text) => updateFormData("email", text)}
+        <Controller
+          name="email"
+          control={control}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <ThemeTextInput
+              variant="email"
+              label="Email Address"
+              placeholder="Enter your email"
+              value={value}
+              onChangeText={onChange}
+              errorMessage={error?.message}
+            />
+          )}
         />
       </View>
     </View>
@@ -242,41 +222,79 @@ export default function CompleteAccountScreen() {
         </Text>
         <View className="flex-row">
           <View className="w-24 mr-2">
-            <ThemeTextInput
-              placeholder="+1"
-              value={formData.phoneNumberPrefix}
-              onChangeText={(text) => updateFormData("phoneNumberPrefix", text)}
+            <Controller
+              name="phoneNumberPrefix"
+              control={control}
+              render={({
+                field: { onChange, value },
+                fieldState: { error },
+              }) => (
+                <ThemeTextInput
+                  placeholder="+1"
+                  value={value}
+                  onChangeText={onChange}
+                  errorMessage={error?.message}
+                />
+              )}
             />
           </View>
           <View className="flex-1">
-            <ThemeTextInput
-              placeholder="Enter phone number"
-              value={formData.phoneNumber}
-              onChangeText={(text) => updateFormData("phoneNumber", text)}
+            <Controller
+              name="phoneNumber"
+              control={control}
+              render={({
+                field: { onChange, value },
+                fieldState: { error },
+              }) => (
+                <ThemeTextInput
+                  placeholder="Enter phone number"
+                  value={value}
+                  onChangeText={onChange}
+                  errorMessage={error?.message}
+                />
+              )}
             />
           </View>
         </View>
       </View>
 
       <View className="mb-4">
-        <ThemeTextInput
-          label="Nationality"
-          placeholder="Enter your nationality"
-          value={formData.nationality}
-          onChangeText={(text) => updateFormData("nationality", text)}
+        <Controller
+          name="nationality"
+          control={control}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <ThemeTextInput
+              label="Nationality"
+              placeholder="Enter your nationality"
+              value={value}
+              onChangeText={onChange}
+              errorMessage={error?.message}
+            />
+          )}
         />
       </View>
 
       <View className="mb-4">
-        <ThemeTextInput
-          label="Date of Birth"
-          placeholder="YYYY-MM-DD"
-          value={formData.dateOfBirth}
-          onChangeText={(text) => updateFormData("dateOfBirth", text)}
+        <Controller
+          name="dateOfBirth"
+          control={control}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <>
+              <ThemeTextInput
+                label="Date of Birth"
+                placeholder="YYYY-MM-DD"
+                value={value}
+                onChangeText={onChange}
+                errorMessage={error?.message}
+              />
+              {!error && (
+                <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Format: YYYY-MM-DD (e.g., 1990-01-15)
+                </Text>
+              )}
+            </>
+          )}
         />
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Format: YYYY-MM-DD (e.g., 1990-01-15)
-        </Text>
       </View>
     </View>
   );
@@ -291,67 +309,116 @@ export default function CompleteAccountScreen() {
       </Text>
 
       <View className="mb-4">
-        <ThemeTextInput
-          label="Address Line 1"
-          placeholder="Street address"
-          value={formData.permanentAddress.addressLine1}
-          onChangeText={(text) => updateAddressField("addressLine1", text)}
+        <Controller
+          name="permanentAddress.addressLine1"
+          control={control}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <ThemeTextInput
+              label="Address Line 1"
+              placeholder="Street address"
+              value={value}
+              onChangeText={onChange}
+              errorMessage={error?.message}
+            />
+          )}
         />
       </View>
 
       <View className="mb-4">
-        <ThemeTextInput
-          label="Address Line 2 (Optional)"
-          placeholder="Apt, Suite, Unit, etc."
-          value={formData.permanentAddress.addressLine2}
-          onChangeText={(text) => updateAddressField("addressLine2", text)}
+        <Controller
+          name="permanentAddress.addressLine2"
+          control={control}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <ThemeTextInput
+              label="Address Line 2 (Optional)"
+              placeholder="Apt, Suite, Unit, etc."
+              value={value || ""}
+              onChangeText={onChange}
+              errorMessage={error?.message}
+            />
+          )}
         />
       </View>
 
       <View className="flex-row mb-4">
         <View className="flex-1 mr-2">
-          <ThemeTextInput
-            label="Locality"
-            placeholder="Locality"
-            value={formData.permanentAddress.locality}
-            onChangeText={(text) => updateAddressField("locality", text)}
+          <Controller
+            name="permanentAddress.locality"
+            control={control}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <ThemeTextInput
+                label="Locality"
+                placeholder="Locality"
+                value={value || ""}
+                onChangeText={onChange}
+                errorMessage={error?.message}
+              />
+            )}
           />
         </View>
         <View className="flex-1 ml-2">
-          <ThemeTextInput
-            label="City"
-            placeholder="City"
-            value={formData.permanentAddress.city}
-            onChangeText={(text) => updateAddressField("city", text)}
+          <Controller
+            name="permanentAddress.city"
+            control={control}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <ThemeTextInput
+                label="City"
+                placeholder="City"
+                value={value}
+                onChangeText={onChange}
+                errorMessage={error?.message}
+              />
+            )}
           />
         </View>
       </View>
 
       <View className="flex-row mb-4">
         <View className="flex-1 mr-2">
-          <ThemeTextInput
-            label="State/Province"
-            placeholder="State"
-            value={formData.permanentAddress.state}
-            onChangeText={(text) => updateAddressField("state", text)}
+          <Controller
+            name="permanentAddress.state"
+            control={control}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <ThemeTextInput
+                label="State/Province"
+                placeholder="State"
+                value={value}
+                onChangeText={onChange}
+                errorMessage={error?.message}
+              />
+            )}
           />
         </View>
         <View className="flex-1 ml-2">
-          <ThemeTextInput
-            label="Postal Code"
-            placeholder="Postal code"
-            value={formData.permanentAddress.postalCode}
-            onChangeText={(text) => updateAddressField("postalCode", text)}
+          <Controller
+            name="permanentAddress.postalCode"
+            control={control}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <ThemeTextInput
+                label="Postal Code"
+                placeholder="Postal code"
+                value={value}
+                onChangeText={onChange}
+                errorMessage={error?.message}
+              />
+            )}
           />
         </View>
       </View>
 
       <View className="mb-4">
-        <ThemeTextInput
-          label="Country"
-          placeholder="Country"
-          value={formData.permanentAddress.country}
-          onChangeText={(text) => updateAddressField("country", text)}
+        <Controller
+          name="permanentAddress.country"
+          control={control}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <ThemeTextInput
+              label="Country"
+              placeholder="Country"
+              value={value}
+              onChangeText={onChange}
+              errorMessage={error?.message}
+            />
+          )}
         />
       </View>
     </View>
@@ -368,6 +435,18 @@ export default function CompleteAccountScreen() {
       default:
         return null;
     }
+  };
+
+  // Check if current step has any errors
+  const hasStepErrors = () => {
+    const fields = STEP_FIELDS[currentStep as keyof typeof STEP_FIELDS];
+    return fields.some((field) => {
+      const parts = field.split(".");
+      if (parts.length === 1) {
+        return !!(errors as any)[field];
+      }
+      return !!(errors as any)[parts[0]]?.[parts[1]];
+    });
   };
 
   return (
@@ -394,11 +473,11 @@ export default function CompleteAccountScreen() {
             {/* Step Indicator */}
             {renderStepIndicator()}
 
-            {/* Error Message */}
-            {error ? (
+            {/* Server Error Message */}
+            {serverError ? (
               <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
                 <Text className="text-red-600 dark:text-red-400 text-sm">
-                  {error}
+                  {serverError}
                 </Text>
               </View>
             ) : null}
@@ -428,7 +507,7 @@ export default function CompleteAccountScreen() {
                   <ThemeButton
                     variant="primary"
                     onPress={handleNext}
-                    disabled={!canProceed()}
+                    disabled={hasStepErrors()}
                     rightIcon={<ChevronRight size={20} color="#FFFFFF" />}
                   >
                     Continue
@@ -436,8 +515,8 @@ export default function CompleteAccountScreen() {
                 ) : (
                   <ThemeButton
                     variant="primary"
-                    onPress={handleSubmit}
-                    disabled={!canProceed()}
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={hasStepErrors()}
                     loading={isLoading}
                   >
                     Submit & Continue to KYC

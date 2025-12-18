@@ -10,101 +10,142 @@ import {
 import React from "react";
 import type { EmailCodeFactor } from "@clerk/types";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import AppleSignInButton from "@/components/AppleSignInButton";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import ThemeButton from "@/components/ui/ThemeButton";
 import ThemeTextInput from "@/components/ui/ThemeTextInput";
+import {
+  signInSchema,
+  verificationCodeSchema,
+  SignInFormData,
+  VerificationCodeFormData,
+} from "@/schemas";
 
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
 
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [code, setCode] = React.useState("");
   const [showEmailCode, setShowEmailCode] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
+  const [serverError, setServerError] = React.useState("");
 
-  const onSignInPress = React.useCallback(async () => {
-    if (!isLoaded) return;
+  // Sign in form
+  const {
+    control: signInControl,
+    handleSubmit: handleSignInSubmit,
+    formState: { isValid: isSignInValid },
+  } = useForm<SignInFormData>({
+    resolver: yupResolver(signInSchema),
+    mode: "onChange",
+    defaultValues: {
+      emailAddress: "",
+      password: "",
+    },
+  });
 
-    setIsLoading(true);
-    setError("");
+  // Verification form
+  const {
+    control: verifyControl,
+    handleSubmit: handleVerifySubmit,
+    formState: { isValid: isVerifyValid },
+  } = useForm<VerificationCodeFormData>({
+    resolver: yupResolver(verificationCodeSchema),
+    mode: "onChange",
+    defaultValues: {
+      code: "",
+    },
+  });
 
-    try {
-      const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
+  const onSignInPress = React.useCallback(
+    async (data: SignInFormData) => {
+      if (!isLoaded) return;
 
-      if (signInAttempt.status === "complete") {
-        await setActive({
-          session: signInAttempt.createdSessionId,
-          navigate: async ({ session }) => {
-            if (session?.currentTask) {
-              console.log(session?.currentTask);
-              return;
-            }
-            router.replace("/(account)/complete-account");
-          },
+      setIsLoading(true);
+      setServerError("");
+
+      try {
+        const signInAttempt = await signIn.create({
+          identifier: data.emailAddress,
+          password: data.password,
         });
-      } else if (signInAttempt.status === "needs_second_factor") {
-        const emailCodeFactor = signInAttempt.supportedSecondFactors?.find(
-          (factor): factor is EmailCodeFactor => factor.strategy === "email_code"
-        );
 
-        if (emailCodeFactor) {
-          await signIn.prepareSecondFactor({
-            strategy: "email_code",
-            emailAddressId: emailCodeFactor.emailAddressId,
+        if (signInAttempt.status === "complete") {
+          await setActive({
+            session: signInAttempt.createdSessionId,
+            navigate: async ({ session }) => {
+              if (session?.currentTask) {
+                console.log(session?.currentTask);
+                return;
+              }
+              router.replace("/(account)/complete-account");
+            },
           });
-          setShowEmailCode(true);
+        } else if (signInAttempt.status === "needs_second_factor") {
+          const emailCodeFactor = signInAttempt.supportedSecondFactors?.find(
+            (factor): factor is EmailCodeFactor =>
+              factor.strategy === "email_code"
+          );
+
+          if (emailCodeFactor) {
+            await signIn.prepareSecondFactor({
+              strategy: "email_code",
+              emailAddressId: emailCodeFactor.emailAddressId,
+            });
+            setShowEmailCode(true);
+          }
+        } else {
+          console.error(JSON.stringify(signInAttempt, null, 2));
         }
-      } else {
-        console.error(JSON.stringify(signInAttempt, null, 2));
+      } catch (err: any) {
+        setServerError(
+          err.errors?.[0]?.message || "An error occurred during sign in"
+        );
+        console.error(JSON.stringify(err, null, 2));
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "An error occurred during sign in");
-      console.error(JSON.stringify(err, null, 2));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoaded, emailAddress, password]);
+    },
+    [isLoaded]
+  );
 
-  const onVerifyPress = React.useCallback(async () => {
-    if (!isLoaded) return;
+  const onVerifyPress = React.useCallback(
+    async (data: VerificationCodeFormData) => {
+      if (!isLoaded) return;
 
-    setIsLoading(true);
-    setError("");
+      setIsLoading(true);
+      setServerError("");
 
-    try {
-      const signInAttempt = await signIn.attemptSecondFactor({
-        strategy: "email_code",
-        code,
-      });
-
-      if (signInAttempt.status === "complete") {
-        await setActive({
-          session: signInAttempt.createdSessionId,
-          navigate: async ({ session }) => {
-            if (session?.currentTask) {
-              console.log(session?.currentTask);
-              return;
-            }
-            router.replace("/(account)/complete-account");
-          },
+      try {
+        const signInAttempt = await signIn.attemptSecondFactor({
+          strategy: "email_code",
+          code: data.code,
         });
-      } else {
-        console.error(JSON.stringify(signInAttempt, null, 2));
+
+        if (signInAttempt.status === "complete") {
+          await setActive({
+            session: signInAttempt.createdSessionId,
+            navigate: async ({ session }) => {
+              if (session?.currentTask) {
+                console.log(session?.currentTask);
+                return;
+              }
+              router.replace("/(account)/complete-account");
+            },
+          });
+        } else {
+          console.error(JSON.stringify(signInAttempt, null, 2));
+        }
+      } catch (err: any) {
+        setServerError(err.errors?.[0]?.message || "Invalid verification code");
+        console.error(JSON.stringify(err, null, 2));
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Invalid verification code");
-      console.error(JSON.stringify(err, null, 2));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoaded, code]);
+    },
+    [isLoaded]
+  );
 
   if (showEmailCode) {
     return (
@@ -127,28 +168,38 @@ export default function SignInScreen() {
                 </Text>
               </View>
 
-              {error ? (
+              {serverError ? (
                 <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
                   <Text className="text-red-600 dark:text-red-400 text-sm">
-                    {error}
+                    {serverError}
                   </Text>
                 </View>
               ) : null}
 
               <View className="mb-6">
-                <ThemeTextInput
-                  variant="code"
-                  label="Verification Code"
-                  placeholder="Enter 6-digit code"
-                  value={code}
-                  onChangeText={setCode}
+                <Controller
+                  name="code"
+                  control={verifyControl}
+                  render={({
+                    field: { onChange, value },
+                    fieldState: { error },
+                  }) => (
+                    <ThemeTextInput
+                      variant="code"
+                      label="Verification Code"
+                      placeholder="Enter 6-digit code"
+                      value={value}
+                      onChangeText={onChange}
+                      errorMessage={error?.message}
+                    />
+                  )}
                 />
               </View>
 
               <ThemeButton
                 variant="primary"
-                onPress={onVerifyPress}
-                disabled={!code}
+                onPress={handleVerifySubmit(onVerifyPress)}
+                disabled={!isVerifyValid}
                 loading={isLoading}
               >
                 Verify
@@ -199,38 +250,58 @@ export default function SignInScreen() {
               <View className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
             </View>
 
-            {error ? (
+            {serverError ? (
               <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
                 <Text className="text-red-600 dark:text-red-400 text-sm">
-                  {error}
+                  {serverError}
                 </Text>
               </View>
             ) : null}
 
             <View className="mb-4">
-              <ThemeTextInput
-                variant="email"
-                label="Email"
-                placeholder="Enter your email"
-                value={emailAddress}
-                onChangeText={setEmailAddress}
+              <Controller
+                name="emailAddress"
+                control={signInControl}
+                render={({
+                  field: { onChange, value },
+                  fieldState: { error },
+                }) => (
+                  <ThemeTextInput
+                    variant="email"
+                    label="Email"
+                    placeholder="Enter your email"
+                    value={value}
+                    onChangeText={onChange}
+                    errorMessage={error?.message}
+                  />
+                )}
               />
             </View>
 
             <View className="mb-6">
-              <ThemeTextInput
-                variant="password"
-                label="Password"
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={setPassword}
+              <Controller
+                name="password"
+                control={signInControl}
+                render={({
+                  field: { onChange, value },
+                  fieldState: { error },
+                }) => (
+                  <ThemeTextInput
+                    variant="password"
+                    label="Password"
+                    placeholder="Enter your password"
+                    value={value}
+                    onChangeText={onChange}
+                    errorMessage={error?.message}
+                  />
+                )}
               />
             </View>
 
             <ThemeButton
               variant="primary"
-              onPress={onSignInPress}
-              disabled={!emailAddress || !password}
+              onPress={handleSignInSubmit(onSignInPress)}
+              disabled={!isSignInValid}
               loading={isLoading}
             >
               Sign in
