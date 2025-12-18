@@ -1,33 +1,34 @@
-import * as React from "react";
-import {
-  Text,
-  View,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronLeft, ChevronRight } from "lucide-react-native";
-import { useForm, Controller } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import ThemeButton from "@/components/ui/ThemeButton";
 import ThemeTextInput from "@/components/ui/ThemeTextInput";
 import { useTheme } from "@/context/ThemeContext";
+import { CompleteAccountFormData, completeAccountSchema } from "@/schemas";
+import { useUser } from "@clerk/clerk-expo";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useRouter } from "expo-router";
+import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import * as React from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
-  submitAccountDetails,
-  AccountFormData,
-} from "@/services/accountService";
-import { completeAccountSchema, CompleteAccountFormData } from "@/schemas";
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const TOTAL_STEPS = 3;
 
 // Fields for each step (used for per-step validation)
 const STEP_FIELDS = {
   1: ["firstName", "lastName", "email"] as const,
-  2: ["phoneNumberPrefix", "phoneNumber", "nationality", "dateOfBirth"] as const,
+  2: [
+    "phoneNumberPrefix",
+    "phoneNumber",
+    "nationality",
+    "dateOfBirth",
+  ] as const,
   3: [
     "permanentAddress.addressLine1",
     "permanentAddress.city",
@@ -97,20 +98,24 @@ export default function CompleteAccountScreen() {
     }
   };
 
-  const onSubmit = async (data: CompleteAccountFormData) => {
-    setIsLoading(true);
-    setServerError("");
+  // const onSubmit = async (data: CompleteAccountFormData) => {
+  //   setIsLoading(true);
+  //   setServerError("");
 
-    try {
-      await submitAccountDetails(data as AccountFormData);
-      router.replace("/(account)/complete-kyc");
-    } catch (err: any) {
-      setServerError(err.message || "Failed to submit account details");
-      console.error("Account submission error:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //   try {
+  //     // await submitAccountDetails(data as AccountFormData);
+  //     // console.log(data);
+  //     console.log("Okay");
+  //     router.replace("/(account)/complete-kyc");
+  //   } catch (err: any) {
+  //     setServerError(err.message || "Failed to submit account details");
+  //     console.error("Account submission error:", err);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const onSubmit = () => router.replace("/(account)/complete-kyc");
 
   const renderStepIndicator = () => (
     <View className="flex-row justify-center mb-8">
@@ -121,8 +126,8 @@ export default function CompleteAccountScreen() {
               step === currentStep
                 ? "bg-primary"
                 : step < currentStep
-                ? "bg-green-500"
-                : "bg-gray-200 dark:bg-gray-700"
+                  ? "bg-green-500"
+                  : "bg-gray-200 dark:bg-gray-700"
             }`}
           >
             <Text
@@ -515,7 +520,7 @@ export default function CompleteAccountScreen() {
                 ) : (
                   <ThemeButton
                     variant="primary"
-                    onPress={handleSubmit(onSubmit)}
+                    onPress={() => router.replace("/(account)/complete-kyc")}
                     disabled={hasStepErrors()}
                     loading={isLoading}
                   >
